@@ -6,7 +6,7 @@ from telegram.ext import Application, CommandHandler, ContextTypes
 # Загружаем токен и URL из переменных окружения
 TOKEN = os.environ["TELEGRAM_TOKEN"]
 WEBHOOK_URL = os.environ["WEBHOOK_URL"]
-WEBHOOK_PATH = f"/{8120286970:AAEsXRKDux2-jE2TsHN8z2Z308I4D4FId1U}"
+WEBHOOK_PATH = f"/{os.environ['TELEGRAM_TOKEN']}"
 
 # Flask-приложение
 app = Flask(__name__)
