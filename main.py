@@ -1,40 +1,38 @@
 import os
-import asyncio
 from flask import Flask, request
 from telegram import Update
-from telegram.ext import (
-    Application, CommandHandler, ContextTypes
-)
+from telegram.ext import Application, CommandHandler, ContextTypes
 
-# Получаем токен и URL из переменных окружения
+# Получаем токен и webhook URL из переменных окружения
 TOKEN = os.environ["TELEGRAM_TOKEN"]
 WEBHOOK_URL = os.environ["WEBHOOK_URL"]
-WEBHOOK_PATH = "/webhook"  # Статичный путь — безопаснее
+WEBHOOK_PATH = f"/webhook/{TOKEN}"
 
-# Инициализация Flask-приложения
+# Flask-приложение
 app = Flask(__name__)
 
-# Инициализация Telegram Application
+# Telegram-приложение
 application = Application.builder().token(TOKEN).build()
 
 # Обработчик команды /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Привет! Я бот по аренде 😊")
+    await update.message.reply_text("Привет! Я бот по аренде жилья 😊")
 
-# Регистрируем обработчик команды
 application.add_handler(CommandHandler("start", start))
 
-# Обработка входящих webhook-запросов от Telegram
+# Flask route для webhook
 @app.route(WEBHOOK_PATH, methods=["POST"])
-def webhook():
+def telegram_webhook():
     update = Update.de_json(request.get_json(force=True), application.bot)
-    asyncio.run(application.process_update(update))
-    return "ok"
+    application.update_queue.put_nowait(update)
+    return "OK"
 
-# Устанавливаем webhook и запускаем Flask-сервер
+# Установка webhook и запуск Flask-сервера
 if __name__ == "__main__":
-    async def setup_webhook():
+    import asyncio
+
+    async def setup():
         await application.bot.set_webhook(url=WEBHOOK_URL + WEBHOOK_PATH)
 
-    asyncio.run(setup_webhook())
+    asyncio.run(setup())
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
